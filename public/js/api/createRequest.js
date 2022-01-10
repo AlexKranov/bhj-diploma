@@ -4,9 +4,9 @@
  * */
 const createRequest = (options = {}) => {
 
-    const request = new XMLHttpRequest();
-    request.responseType = options.responseType;
+    let request = new XMLHttpRequest();
     request.withCredentials = true;
+    request.responseType = options.responseType;
 
     if (options.method === 'GET') {
         let url = options.url;
@@ -16,14 +16,35 @@ const createRequest = (options = {}) => {
             for (let key in data) {
                 url += key + '=' + data[key] + '&';
             }
-            url = url.slice(0, -1);
+            url = url.slice(0,-1);
+        }
+
+        try {
+            if(url) {
+                request.open(options.method, url, true);
+                request.send();
+            }
+        } catch (e) {
+            options.callback( e );
         }
 
     } else {
+
         let formData = new FormData();
+
         for (let key in options.data) {
-            formData.append(key, options.data[key]);
+            formData.append( key, options.data[key]);
         }
+
+        try {
+
+            request.open(options.method, options.url, true);
+            request.send(formData);
+
+        } catch (e) {
+            options.callback(e);
+        }
+
     }
 
     request.addEventListener('readystatechange', () => {
@@ -33,6 +54,8 @@ const createRequest = (options = {}) => {
             let response = request.response;
             options.callback(err, response);
         }
+
     });
+
     return request;
 };
